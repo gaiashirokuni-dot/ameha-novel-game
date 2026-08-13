@@ -12,29 +12,20 @@ window.THERAPISTS = {
     ],
     endings: {
       date: {
-        id: "nayuta_date",
-        label: "NAYUTA DATE END",
-        routeLabel: "DATE END",
-        image: "assets/nayuta/nayuta-01.webp",
-        position: "center 33%",
+        id: "nayuta_date", label: "NAYUTA DATE END", routeLabel: "DATE END",
+        image: "assets/nayuta/nayuta-01.webp", position: "center 33%",
         line: "「じゃあ今日は遊ぼっか。\\n○○ちゃんがやってみたいこと、一緒にしよ。」",
         body: "カラオケ、社交ダンス、写真撮影。\\n決まった形に縛られず、“一緒にやってみたい”を楽しむ時間。"
       },
       love: {
-        id: "nayuta_love",
-        label: "NAYUTA LOVE END",
-        routeLabel: "LOVE END",
-        image: "assets/nayuta/nayuta-07.webp",
-        position: "center 28%",
+        id: "nayuta_love", label: "NAYUTA LOVE END", routeLabel: "LOVE END",
+        image: "assets/nayuta/nayuta-07.webp", position: "center 28%",
         line: "「○○ちゃん。\\n……もうちょっと、こっち来る？」",
         body: "手をつないで、ハグをして、少しずつ近づく。\\n急がず、恋人みたいな距離感を楽しむ時間。"
       },
       adult: {
-        id: "nayuta_night",
-        label: "NAYUTA NIGHT END",
-        routeLabel: "NIGHT END",
-        image: "assets/nayuta/nayuta-12.webp",
-        position: "center 27%",
+        id: "nayuta_night", label: "NAYUTA NIGHT END", routeLabel: "NIGHT END",
+        image: "assets/nayuta/nayuta-12.webp", position: "center 27%",
         line: "「……一緒にシャワー、行こっか。」",
         body: "低い声と静かな空気の中で、少しだけ日常の外へ。\\nこの先は、実際に会った時のお楽しみ。"
       }
@@ -56,31 +47,28 @@ window.THERAPISTS = {
     ],
     endings: {
       date: {
-        id: "gorilla_date",
-        label: "GORILLA DATE END",
-        routeLabel: "DATE END",
-        image: "assets/gorilla/gorilla-09.webp",
-        position: "center 24%",
-        line: "「ハニー。\\n店長とポケカする覚悟はできてる？」",
-        body: "筋トレ、ポケカ、そして予想外の寄り道。\\n“普通じゃないけど妙に楽しい”が、店長流のデート。"
+        id: "gorilla_date", label: "GORILLA DATE END", routeLabel: "DATE END",
+        image: "assets/gorilla/gorilla-09.webp", position: "center 24%",
+        title: "普通のデートを選んだはずだった",
+        line: "「ハニー。今日は店長が最高のデートプランを考えてきたよ。」"
       },
       love: {
-        id: "gorilla_love",
-        label: "GORILLA LOVE END",
-        routeLabel: "LOVE END",
-        image: "assets/gorilla/gorilla-04.webp",
-        position: "center 22%",
-        line: "「ハニー。\\nまずは腕相撲しようか。……恋人っぽいでしょ？」",
-        body: "圧倒的な見た目とは裏腹に、ゆっくり、やさしく、常に気遣う。\\nたぶん恋人感。少なくとも店長はそう思っている。"
+        id: "gorilla_love", label: "GORILLA LOVE END", routeLabel: "LOVE END",
+        image: "assets/gorilla/gorilla-04.webp", position: "center 22%",
+        title: "恋とは、腕相撲のあとに始まる",
+        line: "「ハニー。店長さ、今日はちゃんと恋人っぽいことしたいんだ。」"
       },
       adult: {
-        id: "gorilla_dark",
-        label: "GORILLA DARK END",
-        routeLabel: "DARK END",
-        image: "assets/gorilla/gorilla-12.webp",
-        position: "center 24%",
-        line: "「ハニー。\\n今日は店長に任せられる？」",
-        body: "やさしい低音の奥にある、普段とは違う一面。\\n少し刺激的な世界を覗いてみたい夜に。"
+        id: "gorilla_dark", label: "GORILLA DARK END", routeLabel: "DARK END",
+        image: "assets/gorilla/gorilla-12.webp", position: "center 24%",
+        title: "あなたは禁断の装備を手に入れた",
+        line: "「ハニー。ここから先は、ちゃんと確認しながらいくから安心して。」"
+      },
+      true: {
+        id: "gorilla_true", label: "GORILLA TRUE END", routeLabel: "SECRET END",
+        image: "assets/gorilla/gorilla-11.webp", position: "center 22%",
+        title: "もう店長から逃げられない",
+        line: "「……ハニー。\\n店長を選びすぎ。」"
       }
     }
   }
