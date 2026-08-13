@@ -1,69 +1,46 @@
-AMEHA NOVEL GAME V4 - 保守性改善版
+AMEHA NOVEL GAME V5
 
-【V4の最大の変更】
-ゲームシステムと文章を完全分離しました。
+【V5の変更】
+・個別ルートを「実写風背景＋背景透過立ち絵＋会話UI」に変更
+・なゆた／ゴリラの生成済み立ち絵を実装
+・生成済み実写風背景を実装
+・ENDに入ると立ち絵を消し、従来の宣材写真をイベントCGとして表示
+・文章とゲームシステムの分離は維持
 
-■ 自由に編集してよいファイル
-content/text.js
-
-このファイルだけで以下を変更できます。
-・質問文
-・選択肢
-・タイトル
-・ボタン文
-・なゆたのセリフ
-・ゴリラのセリフ
-・ナレーション
-・ENDタイトル
-・END説明
-
-文章を変更しても、判定ポイントや分岐条件は変わりません。
-
---------------------------------------------------
-
-■ 基本触らないファイル
-
-config/game-config.js
-→ 判定ポイント、分岐条件、画像、プロフィールURL、END ID
-
-js/game.js
-→ ゲームシステム本体
-
-css/style.css
-→ デザイン
-
-index.html
-→ 各ファイルの読み込み
-
---------------------------------------------------
-
-【GitHubで文章だけ変更する手順】
-
-1. GitHubリポジトリを開く
-2. content フォルダを開く
-3. text.js を開く
-4. 鉛筆マーク（Edit this file）
-5. 変更したい文章だけ修正
-6. Commit changes
-
-GitHub Pagesへ自動反映されます。
-
---------------------------------------------------
-
-【GitHubへV4を更新する方法】
-
-V4 ZIPを解凍して以下をアップロード・上書きします。
-
-index.html
-README.txt
-EDIT_TEXT_ONLY.txt
-content/
-config/
-js/
-css/
+【素材構造】
 assets/
+  backgrounds/
+    city-day.webp
+    cafe.webp
+    city-night.webp
+    hotel.webp
+    gym.webp
 
-V3には content/ と config/ が存在しないため、
-この2フォルダは新規追加されます。
+  standing/
+    nayuta/normal.png
+    gorilla/normal.png
 
-GitHub Pages URLとJimdo iframe URLは変更不要です。
+  nayuta/
+    既存宣材写真（END用イベントCG）
+
+  gorilla/
+    既存宣材写真（END用イベントCG）
+
+【文章変更】
+content/text.js
+だけ編集してください。
+
+【背景・立ち絵変更】
+config/scene-config.js
+
+【判定変更】
+config/game-config.js
+
+【ゲームシステム】
+js/game.js
+
+【GitHub更新】
+ZIPを解凍し、中身を既存リポジトリへ上書きしてください。
+V5では assets/backgrounds、assets/standing、config/scene-config.js が追加されます。
+
+GitHub Pages URL、Jimdo iframe URLは変更不要です。

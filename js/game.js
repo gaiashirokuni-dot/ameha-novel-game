@@ -3,13 +3,17 @@
 
   const TEXT = window.GAME_TEXT;
   const CONFIG = window.GAME_CONFIG;
+  const SCENES = window.SCENE_CONFIG;
 
-  if (!TEXT || !CONFIG) {
-    throw new Error("GAME_TEXT または GAME_CONFIG が読み込まれていません。");
+  if (!TEXT || !CONFIG || !SCENES) {
+    throw new Error("GAME_TEXT / GAME_CONFIG / SCENE_CONFIG の読み込みに失敗しました。");
   }
 
+  const game = document.getElementById("game");
   const stage = document.getElementById("stage");
   const backdrop = document.getElementById("backdrop");
+  const standingLayer = document.getElementById("standingLayer");
+  const standingImage = document.getElementById("standingImage");
   const flash = document.getElementById("flash");
   const systemAlert = document.getElementById("systemAlert");
   const homeBtn = document.getElementById("homeBtn");
@@ -59,7 +63,7 @@
     return String(value ?? "").replaceAll("○○", calledName());
   }
 
-  function setBg(url, pos = "center") {
+  function setBackdrop(url, pos = "center") {
     if (!url) {
       backdrop.style.backgroundImage = "";
       backdrop.style.backgroundPosition = "center";
@@ -67,6 +71,57 @@
     }
     backdrop.style.backgroundImage = `url("${url}")`;
     backdrop.style.backgroundPosition = pos;
+  }
+
+  function setBackgroundKey(key) {
+    setBackdrop(SCENES.backgrounds[key], "center");
+  }
+
+  function setStanding(therapistId, visible = true) {
+    const cfg = SCENES.standing[therapistId];
+
+    if (!visible || !cfg) {
+      standingImage.classList.remove("show");
+      setTimeout(() => {
+        standingLayer.hidden = true;
+        standingImage.removeAttribute("src");
+      }, 260);
+      return;
+    }
+
+    standingLayer.hidden = false;
+    standingImage.src = cfg.src;
+    standingImage.alt = cfg.alt || "";
+    standingImage.style.left = `${cfg.x ?? 50}%`;
+    standingImage.style.bottom = `${100 - (cfg.y ?? 100)}%`;
+    standingImage.style.transform =
+      `translateX(-50%) scale(${cfg.scale ?? 1})`;
+
+    requestAnimationFrame(() => standingImage.classList.add("show"));
+  }
+
+  function enterRouteMode(therapistId, backgroundKey) {
+    game.classList.remove("event-cg-mode");
+    game.classList.add("route-mode");
+    setBackgroundKey(backgroundKey);
+    setStanding(therapistId, true);
+  }
+
+  function leaveRouteMode() {
+    game.classList.remove("route-mode");
+    setStanding(null, false);
+  }
+
+  function enterEventCG(image, position = "center") {
+    game.classList.remove("route-mode");
+    game.classList.add("event-cg-mode");
+    setStanding(null, false);
+    setBackdrop(image, position);
+  }
+
+  function clearVisualMode() {
+    game.classList.remove("route-mode", "event-cg-mode");
+    setStanding(null, false);
   }
 
   function getFound() {
@@ -115,10 +170,6 @@
     setTimeout(() => systemAlert.classList.remove("on"), duration);
   }
 
-  function getTherapistText(id) {
-    return TEXT[id];
-  }
-
   function getEndingConfig(therapist, route) {
     return CONFIG.therapists[therapist].endings[route];
   }
@@ -127,12 +178,26 @@
     return TEXT[therapist][route];
   }
 
+  function routeCfg(therapist, route) {
+    return SCENES.routes[therapist][route];
+  }
+
+  function routeCard(speaker, dialogue, actionsHtml = "", extraClass = "") {
+    stage.innerHTML = `
+      <section class="route-dialogue-card ${extraClass}">
+        <div class="speaker">${esc(speaker)}</div>
+        <div class="dialogue">${htmlText(personalize(dialogue))}</div>
+        ${actionsHtml ? `<div class="actions">${actionsHtml}</div>` : ""}
+      </section>`;
+  }
+
   function startScreen() {
     state = freshState();
+    clearVisualMode();
     homeBtn.hidden = true;
     gorillaMeter.hidden = true;
     brand.textContent = TEXT.ui.brand;
-    setBg(null);
+    setBackdrop(null);
 
     stage.innerHTML = `
       <section class="card center">
@@ -152,6 +217,7 @@
 
   function nameScreen() {
     homeBtn.hidden = false;
+    clearVisualMode();
 
     stage.innerHTML = `
       <section class="card">
@@ -187,12 +253,15 @@
 
   function progressHtml() {
     return `<div class="progress">${
-      CONFIG.questions.map((_, i) => `<i class="${i <= state.index ? "on" : ""}"></i>`).join("")
+      CONFIG.questions.map((_, i) =>
+        `<i class="${i <= state.index ? "on" : ""}"></i>`
+      ).join("")
     }</div>`;
   }
 
   function questionScreen() {
-    setBg(null);
+    clearVisualMode();
+    setBackdrop(null);
     updateCorruption();
 
     const qConfig = CONFIG.questions[state.index];
@@ -298,7 +367,6 @@
         showAlert(TEXT.ui.systemOverride, 900);
         setTimeout(normalPreReveal, 700);
       };
-
       return;
     }
 
@@ -306,7 +374,8 @@
   }
 
   function normalPreReveal() {
-    setBg(null);
+    clearVisualMode();
+    setBackdrop(null);
 
     stage.innerHTML = `
       <section class="card center">
@@ -326,78 +395,94 @@
     flash.classList.add("on");
 
     setTimeout(() => {
-      if (state.result.therapist === "gorilla") {
-        startGorillaEnding();
-      } else {
-        revealNayutaEnding();
-      }
-
+      startIndividualRoute();
       setTimeout(() => flash.classList.remove("on"), 150);
     }, 580);
   }
 
-  function revealNayutaEnding() {
-    const tConfig = CONFIG.therapists.nayuta;
-    const tText = TEXT.nayuta;
-    const eConfig = getEndingConfig("nayuta", state.result.route);
-    const eText = getEndingText("nayuta", state.result.route);
+  function startIndividualRoute() {
+    const {therapist, route} = state.result;
+    const cfg = routeCfg(therapist, route);
+    enterRouteMode(therapist, cfg.openingBackground);
 
-    saveEnding(eConfig.id);
-    setBg(eConfig.image, eConfig.position);
-
-    stage.innerHTML = `
-      <section class="card center">
-        <div class="ending-count">${esc(eText.label)}</div>
-        <div class="result-name">${esc(tText.name)}</div>
-        <div class="result-route">${esc(eText.routeLabel)}</div>
-        <p class="lead">${htmlText(personalize(eText.line))}</p>
-        <p class="muted">${htmlText(eText.body)}</p>
-        ${finalActions("nayuta")}
-      </section>`;
-
-    bindFinalActions("nayuta");
+    if (therapist === "nayuta") startNayutaRoute(route);
+    else startGorillaRoute(route);
   }
 
-  function startGorillaEnding() {
-    const route = state.result.route;
-    const eConfig = getEndingConfig("gorilla", route);
-    setBg(eConfig.image, eConfig.position);
+  // =======================================================
+  // NAYUTA ROUTES
+  // =======================================================
 
+  function startNayutaRoute(route) {
+    const t = TEXT.nayuta[route];
+    const r = t.route;
+    const cfg = routeCfg("nayuta", route);
+
+    const actions = `
+      <button class="choice" data-nayuta="a">${esc(r.choices.a)}</button>
+      <button class="choice" data-nayuta="b">${esc(r.choices.b)}</button>
+      <button class="choice" data-nayuta="c">${esc(r.choices.c)}</button>
+    `;
+
+    routeCard(TEXT.nayuta.name, r.opening, actions);
+
+    stage.querySelectorAll("[data-nayuta]").forEach(button => {
+      button.onclick = () => {
+        enterRouteMode("nayuta", cfg.secondBackground);
+        const answer = button.dataset.nayuta;
+
+        routeCard(
+          TEXT.nayuta.name,
+          r.replies[answer],
+          `<button class="btn primary" id="nayutaContinue">${esc(TEXT.ui.routeNext)}</button>`
+        );
+
+        document.getElementById("nayutaContinue").onclick = () => {
+          routeCard(
+            TEXT.nayuta.name,
+            r.closing,
+            `<button class="btn primary" id="nayutaEnd">${esc(TEXT.ui.routeToEnd)}</button>`
+          );
+
+          document.getElementById("nayutaEnd").onclick = () => revealEnding("nayuta", route);
+        };
+      };
+    });
+  }
+
+  // =======================================================
+  // GORILLA ROUTES
+  // =======================================================
+
+  function startGorillaRoute(route) {
     if (route === "date") gorillaDate1();
     else if (route === "love") gorillaLove1();
     else if (route === "adult") gorillaDark1();
     else gorillaTrue1();
   }
 
-  // -------------------------------------------------------
-  // GORILLA DATE
-  // -------------------------------------------------------
   function gorillaDate1() {
     const t = TEXT.gorilla.date;
 
-    stage.innerHTML = `
-      <section class="card">
-        <div class="speaker">${esc(TEXT.gorilla.name)}</div>
-        <div class="dialogue">${htmlText(t.opening)}</div>
-        <div class="actions">
-          <button class="choice" id="gd1">${esc(t.openingChoice)}</button>
-        </div>
-      </section>`;
+    routeCard(
+      TEXT.gorilla.name,
+      t.opening,
+      `<button class="choice" id="gd1">${esc(t.openingChoice)}</button>`
+    );
 
     document.getElementById("gd1").onclick = gorillaDate2;
   }
 
   function gorillaDate2() {
     const t = TEXT.gorilla.date;
+    const cfg = routeCfg("gorilla", "date");
+    enterRouteMode("gorilla", cfg.secondBackground);
 
-    stage.innerHTML = `
-      <section class="card">
-        <div class="speaker">${esc(TEXT.gorilla.name)}</div>
-        <div class="dialogue">${htmlText(t.plan)}</div>
-        <div class="actions">
-          <button class="choice" id="gd2">${esc(t.planChoice)}</button>
-        </div>
-      </section>`;
+    routeCard(
+      TEXT.gorilla.name,
+      t.plan,
+      `<button class="choice" id="gd2">${esc(t.planChoice)}</button>`
+    );
 
     document.getElementById("gd2").onclick = gorillaDate3;
   }
@@ -405,41 +490,40 @@
   function gorillaDate3() {
     const t = TEXT.gorilla.date;
 
-    stage.innerHTML = `
-      <section class="card">
-        <div class="speaker">${esc(TEXT.gorilla.name)}</div>
-        <div class="dialogue">${htmlText(t.collar)}</div>
-        <div class="actions">
-          <button class="choice" data-answer="wait">${esc(t.collarChoices.wait)}</button>
-          <button class="choice" data-answer="why">${esc(t.collarChoices.why)}</button>
-          <button class="choice gorilla-choice" data-answer="black">${esc(t.collarChoices.black)}</button>
-        </div>
-      </section>`;
+    const actions = `
+      <button class="choice" data-answer="wait">${esc(t.collarChoices.wait)}</button>
+      <button class="choice" data-answer="why">${esc(t.collarChoices.why)}</button>
+      <button class="choice gorilla-choice" data-answer="black">${esc(t.collarChoices.black)}</button>
+    `;
+
+    routeCard(TEXT.gorilla.name, t.collar, actions);
 
     stage.querySelectorAll("[data-answer]").forEach(button => {
       button.onclick = () => {
         const answer = button.dataset.answer;
-        finishGorilla("date", t.collarReplies[answer], t.footer);
+
+        routeCard(
+          TEXT.gorilla.name,
+          t.collarReplies[answer],
+          `<button class="btn primary" id="gorillaDateEnd">${esc(TEXT.ui.routeToEnd)}</button>`
+        );
+
+        document.getElementById("gorillaDateEnd").onclick = () =>
+          revealEnding("gorilla", "date", t.footer);
       };
     });
   }
 
-  // -------------------------------------------------------
-  // GORILLA LOVE
-  // -------------------------------------------------------
   function gorillaLove1() {
     const t = TEXT.gorilla.love;
 
-    stage.innerHTML = `
-      <section class="card">
-        <div class="speaker">${esc(TEXT.gorilla.name)}</div>
-        <div class="dialogue">${htmlText(t.opening)}</div>
-        <div class="actions">
-          <button class="choice" data-love="hand">${esc(t.guesses.hand)}</button>
-          <button class="choice" data-love="hug">${esc(t.guesses.hug)}</button>
-          <button class="choice" data-love="kiss">${esc(t.guesses.kiss)}</button>
-        </div>
-      </section>`;
+    const actions = `
+      <button class="choice" data-love="hand">${esc(t.guesses.hand)}</button>
+      <button class="choice" data-love="hug">${esc(t.guesses.hug)}</button>
+      <button class="choice" data-love="kiss">${esc(t.guesses.kiss)}</button>
+    `;
+
+    routeCard(TEXT.gorilla.name, t.opening, actions);
 
     stage.querySelectorAll("[data-love]").forEach(button => {
       button.onclick = gorillaLove2;
@@ -448,17 +532,16 @@
 
   function gorillaLove2() {
     const t = TEXT.gorilla.love;
+    const cfg = routeCfg("gorilla", "love");
+    enterRouteMode("gorilla", cfg.secondBackground);
 
-    stage.innerHTML = `
-      <section class="card center">
-        <div class="kicker">${esc(t.revealKicker)}</div>
-        <h2 class="title">${htmlText(t.reveal)}</h2>
-        <div class="actions">
-          <button class="choice" data-arm="fight">${esc(t.armChoices.fight)}</button>
-          <button class="choice" data-arm="lose">${esc(t.armChoices.lose)}</button>
-          <button class="choice" data-arm="no">${esc(t.armChoices.no)}</button>
-        </div>
-      </section>`;
+    const actions = `
+      <button class="choice" data-arm="fight">${esc(t.armChoices.fight)}</button>
+      <button class="choice" data-arm="lose">${esc(t.armChoices.lose)}</button>
+      <button class="choice" data-arm="no">${esc(t.armChoices.no)}</button>
+    `;
+
+    routeCard(TEXT.gorilla.name, `${t.revealKicker}\n\n${t.reveal}`, actions);
 
     stage.querySelectorAll("[data-arm]").forEach(button => {
       button.onclick = () => {
@@ -470,36 +553,26 @@
   function gorillaLove3(reply) {
     const t = TEXT.gorilla.love;
 
-    stage.innerHTML = `
-      <section class="card">
-        <div class="speaker">${esc(TEXT.gorilla.name)}</div>
-        <div class="dialogue">${htmlText(reply)}<br><br>${htmlText(t.closing)}</div>
-        <div class="actions">
-          <button class="btn primary" id="glEnd">${esc(t.endButton)}</button>
-        </div>
-      </section>`;
+    routeCard(
+      TEXT.gorilla.name,
+      `${reply}\n\n${t.closing}`,
+      `<button class="btn primary" id="glEnd">${esc(t.endButton)}</button>`
+    );
 
-    document.getElementById("glEnd").onclick = () => {
-      finishGorilla("love", "", t.footer);
-    };
+    document.getElementById("glEnd").onclick = () =>
+      revealEnding("gorilla", "love", t.footer);
   }
 
-  // -------------------------------------------------------
-  // GORILLA DARK
-  // -------------------------------------------------------
   function gorillaDark1() {
     const t = TEXT.gorilla.adult;
 
-    stage.innerHTML = `
-      <section class="card">
-        <div class="speaker">${esc(TEXT.gorilla.name)}</div>
-        <div class="dialogue">${htmlText(t.opening)}</div>
-        <div class="actions">
-          <button class="choice" data-dark="ok">${esc(t.choices.ok)}</button>
-          <button class="choice" data-dark="nervous">${esc(t.choices.nervous)}</button>
-          <button class="choice gorilla-choice" data-dark="leave">${esc(t.choices.leave)}</button>
-        </div>
-      </section>`;
+    const actions = `
+      <button class="choice" data-dark="ok">${esc(t.choices.ok)}</button>
+      <button class="choice" data-dark="nervous">${esc(t.choices.nervous)}</button>
+      <button class="choice gorilla-choice" data-dark="leave">${esc(t.choices.leave)}</button>
+    `;
+
+    routeCard(TEXT.gorilla.name, t.opening, actions);
 
     stage.querySelectorAll("[data-dark]").forEach(button => {
       button.onclick = gorillaDark2;
@@ -508,14 +581,13 @@
 
   function gorillaDark2() {
     const t = TEXT.gorilla.adult;
-
     flash.classList.add("on");
 
     setTimeout(() => {
       flash.classList.remove("on");
 
       stage.innerHTML = `
-        <section class="card">
+        <section class="route-dialogue-card">
           <div class="kicker corrupt-text">${esc(t.itemKicker)}</div>
           <div class="item-card">
             <div class="item-title">${esc(t.itemCategory)}</div>
@@ -538,68 +610,91 @@
             return;
           }
 
-          finishGorilla("adult", t.itemReplies[answer], t.footer);
+          routeCard(
+            TEXT.gorilla.name,
+            t.itemReplies[answer],
+            `<button class="btn primary" id="darkEnd">${esc(TEXT.ui.routeToEnd)}</button>`
+          );
+
+          document.getElementById("darkEnd").onclick = () =>
+            revealEnding("gorilla", "adult", t.footer);
         };
       });
     }, 550);
   }
 
-  // -------------------------------------------------------
-  // GORILLA TRUE
-  // -------------------------------------------------------
   function gorillaTrue1() {
     const t = TEXT.gorilla.true;
+    const cfg = routeCfg("gorilla", "true");
 
+    enterRouteMode("gorilla", cfg.openingBackground);
     brand.textContent = "GORILLA SYSTEM";
     gorillaMeter.hidden = false;
     gorillaMeter.textContent = "GORILLA LEVEL 100%";
 
-    stage.innerHTML = `
-      <section class="card center system-corrupt">
-        <div class="kicker corrupt-text">${esc(t.kicker)}</div>
-        <h2 class="title">${esc(t.label)}</h2>
-        <p class="lead">${htmlText(t.opening)}</p>
-        <div class="actions">
-          <button class="btn primary" id="gt1">${esc(t.continueButton)}</button>
-        </div>
-      </section>`;
+    routeCard(
+      TEXT.gorilla.name,
+      t.opening,
+      `<button class="btn primary" id="gt1">${esc(t.continueButton)}</button>`,
+      "system-corrupt"
+    );
 
     document.getElementById("gt1").onclick = () => {
-      stage.innerHTML = `
-        <section class="card center system-corrupt">
-          <div class="kicker corrupt-text">${esc(t.overrideKicker)}</div>
-          <h2 class="title">${htmlText(t.overrideTitle)}</h2>
-          <p class="lead">${htmlText(t.overrideLead)}</p>
-          <div class="actions">
-            <button class="btn primary" id="gtEnd">${esc(t.acceptButton)}</button>
-          </div>
-        </section>`;
+      enterRouteMode("gorilla", cfg.secondBackground);
 
-      document.getElementById("gtEnd").onclick = () => {
-        finishGorilla("true", t.finalReply, t.footer);
-      };
+      routeCard(
+        TEXT.gorilla.name,
+        `${t.overrideTitle}\n\n${t.overrideLead}`,
+        `<button class="btn primary" id="gtEnd">${esc(t.acceptButton)}</button>`,
+        "system-corrupt"
+      );
+
+      document.getElementById("gtEnd").onclick = () =>
+        revealEnding("gorilla", "true", t.footer, t.finalReply);
     };
   }
 
-  function finishGorilla(route, extra, footer) {
-    const eConfig = getEndingConfig("gorilla", route);
-    const eText = getEndingText("gorilla", route);
+  // =======================================================
+  // EVENT CG / ENDING
+  // =======================================================
+
+  function revealEnding(therapistId, route, footerOverride = "", extraOverride = "") {
+    const eConfig = getEndingConfig(therapistId, route);
+    const eText = getEndingText(therapistId, route);
+    const name = TEXT[therapistId].name;
 
     saveEnding(eConfig.id);
-    setBg(eConfig.image, eConfig.position);
 
-    stage.innerHTML = `
-      <section class="card center ${route === "true" ? "system-corrupt" : ""}">
-        <div class="ending-count">${esc(eText.label)}</div>
-        <div class="result-name">${esc(TEXT.gorilla.name)}</div>
-        <div class="result-route">${esc(eText.routeLabel)}</div>
-        <h2 class="question" style="margin-top:14px">${htmlText(eText.title)}</h2>
-        ${extra ? `<p class="lead">${htmlText(extra)}</p>` : ""}
-        <p class="muted">${htmlText(footer)}</p>
-        ${finalActions("gorilla")}
-      </section>`;
+    flash.classList.add("on");
 
-    bindFinalActions("gorilla");
+    setTimeout(() => {
+      enterEventCG(eConfig.image, eConfig.position);
+      flash.classList.remove("on");
+
+      const title = eText.title || "";
+      const mainLine =
+        extraOverride ||
+        eText.line ||
+        "";
+
+      const footer =
+        footerOverride ||
+        eText.body ||
+        "";
+
+      stage.innerHTML = `
+        <section class="card center ${route === "true" ? "system-corrupt" : ""}">
+          <div class="ending-count">${esc(eText.label)}</div>
+          <div class="result-name">${esc(name)}</div>
+          <div class="result-route">${esc(eText.routeLabel)}</div>
+          ${title ? `<h2 class="question" style="margin-top:14px">${htmlText(title)}</h2>` : ""}
+          ${mainLine ? `<p class="lead">${htmlText(personalize(mainLine))}</p>` : ""}
+          ${footer ? `<p class="muted">${htmlText(footer)}</p>` : ""}
+          ${finalActions(therapistId)}
+        </section>`;
+
+      bindFinalActions(therapistId);
+    }, 430);
   }
 
   function finalActions(therapistId) {
@@ -628,10 +723,11 @@
   }
 
   function collectionScreen() {
+    clearVisualMode();
     homeBtn.hidden = false;
     gorillaMeter.hidden = true;
     brand.textContent = TEXT.ui.brand;
-    setBg(null);
+    setBackdrop(null);
 
     const found = getFound();
 

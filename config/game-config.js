@@ -20,7 +20,7 @@
 
 window.GAME_CONFIG = {
 
-  storageKey: "amehaNovelEndsV4",
+  storageKey: "amehaNovelEndsV5",
 
   endingOrder: [
     ["nayuta","date"],

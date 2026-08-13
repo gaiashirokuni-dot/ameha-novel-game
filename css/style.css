@@ -156,3 +156,116 @@ button{cursor:pointer}
   body{padding:18px}
   .game-shell{height:min(920px,calc(100svh - 36px));border-radius:24px;box-shadow:0 24px 70px rgba(0,0,0,.38)}
 }
+
+
+/* ========================================================
+   V5 個別ルート：背景＋立ち絵＋会話レイヤー
+   ======================================================== */
+
+.standing-layer{
+  position:absolute;
+  inset:0;
+  z-index:3;
+  pointer-events:none;
+  overflow:hidden;
+}
+
+.standing-image{
+  position:absolute;
+  left:50%;
+  bottom:0;
+  width:auto;
+  height:78%;
+  max-width:94%;
+  object-fit:contain;
+  object-position:center bottom;
+  transform:translateX(-50%);
+  transform-origin:center bottom;
+  filter:drop-shadow(0 12px 18px rgba(0,0,0,.34));
+  opacity:0;
+  transition:
+    opacity .45s ease,
+    transform .45s ease,
+    filter .35s ease;
+}
+
+.standing-image.show{
+  opacity:1;
+}
+
+.game-shell.route-mode .backdrop{
+  transform:scale(1.01);
+  filter:saturate(.93) brightness(.92);
+}
+
+.game-shell.route-mode .screen-shade{
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(0,0,0,.08),
+      rgba(0,0,0,.04) 42%,
+      rgba(0,0,0,.68) 72%,
+      rgba(0,0,0,.88)
+    );
+}
+
+.game-shell.route-mode .stage{
+  padding-top:68px;
+  padding-bottom:calc(16px + env(safe-area-inset-bottom));
+}
+
+.route-dialogue-card{
+  background:rgba(9,9,13,.88);
+  border-radius:17px;
+  padding:15px 16px;
+  border:1px solid rgba(255,255,255,.22);
+  box-shadow:0 16px 45px rgba(0,0,0,.42);
+  backdrop-filter:blur(15px);
+  animation:rise .28s ease both;
+}
+
+.route-dialogue-card .speaker{
+  font-size:11px;
+  letter-spacing:.15em;
+  margin-bottom:7px;
+  color:rgba(255,255,255,.76);
+}
+
+.route-dialogue-card .dialogue{
+  font-size:15px;
+  line-height:1.86;
+}
+
+.route-dialogue-card .actions{
+  margin-top:13px;
+  gap:7px;
+}
+
+.route-dialogue-card .choice,
+.route-dialogue-card .btn{
+  background:rgba(255,255,255,.08);
+}
+
+.event-cg-mode .standing-layer{
+  display:none;
+}
+
+.event-cg-mode .screen-shade{
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(0,0,0,.08),
+      rgba(0,0,0,.15) 45%,
+      rgba(0,0,0,.82)
+    );
+}
+
+.event-cg-mode .backdrop{
+  filter:none;
+  transform:scale(1.015);
+}
+
+@media(max-height:700px){
+  .standing-image{height:70%}
+  .route-dialogue-card .dialogue{font-size:14px;line-height:1.72}
+}
