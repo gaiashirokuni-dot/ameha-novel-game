@@ -1,4 +1,13 @@
 (() => {
+  "use strict";
+
+  const TEXT = window.GAME_TEXT;
+  const CONFIG = window.GAME_CONFIG;
+
+  if (!TEXT || !CONFIG) {
+    throw new Error("GAME_TEXT または GAME_CONFIG が読み込まれていません。");
+  }
+
   const stage = document.getElementById("stage");
   const backdrop = document.getElementById("backdrop");
   const flash = document.getElementById("flash");
@@ -8,105 +17,50 @@
   const gorillaMeter = document.getElementById("gorillaMeter");
   const brand = document.getElementById("brand");
 
-  const ENDING_ORDER = [
-    ["nayuta","date"],["nayuta","love"],["nayuta","adult"],
-    ["gorilla","date"],["gorilla","love"],["gorilla","adult"],
-    ["gorilla","true"]
-  ];
-
-  const QUESTIONS = [
-    {
-      text:"せっかく予定のない休日。\n今の気分に近いのは？",
-      choices:[
-        {text:"行ったことのない場所へ出かけたい", scores:{route:{date:2},therapist:{gorilla:1}}},
-        {text:"気になる人とのんびり過ごしたい", scores:{route:{love:2},therapist:{nayuta:1}}},
-        {text:"今日は少し刺激的なことをしてみたい", scores:{route:{adult:2}}}
-      ]
-    },
-    {
-      text:"初対面の相手。\nどんな瞬間に惹かれそう？",
-      choices:[
-        {text:"声や話し方、空気感にドキッとした時", scores:{therapist:{nayuta:3},route:{love:1}}},
-        {text:"立ち姿や頼もしさを感じた時", scores:{therapist:{gorilla:3},route:{adult:1}}, gorillaSecret:1},
-        {text:"見た目と中身のギャップを見つけた時", scores:{therapist:{gorilla:2,nayuta:1}}, gorillaSecret:1}
-      ]
-    },
-    {
-      text:"デート中、少し沈黙が続いた。\nあなたなら？",
-      choices:[
-        {text:"その静かな時間も心地いい", scores:{therapist:{nayuta:2},route:{love:1}}},
-        {text:"何か面白いことを始める", scores:{therapist:{gorilla:2},route:{date:2}}, gorillaSecret:1},
-        {text:"相手がどう出るか、少し待ってみる", scores:{route:{adult:1,love:1}}}
-      ]
-    },
-    {
-      text:"突然「このあと何する？」と聞かれた。",
-      choices:[
-        {text:"カラオケに行く", scores:{therapist:{nayuta:2},route:{date:2}}},
-        {text:"身体を動かしたい", scores:{therapist:{gorilla:2,nayuta:1},route:{date:2}}, gorillaSecret:2},
-        {text:"今日は相手に全部任せてみる", scores:{route:{adult:3},therapist:{gorilla:1}}, gorillaSecret:1}
-      ]
-    },
-    {
-      text:"恋人っぽい距離感なら、どれがいい？",
-      choices:[
-        {text:"自然に手をつないで歩く", scores:{therapist:{nayuta:2},route:{love:3}}},
-        {text:"ぎゅっと抱きしめられる", scores:{route:{love:2,adult:1}}},
-        {text:"なぜか腕相撲を挑まれる", scores:{therapist:{gorilla:4},route:{love:1,date:1}}, gorillaSecret:3}
-      ]
-    },
-    {
-      text:"相手に言われて、一番ドキッとするのは？",
-      choices:[
-        {text:"「……こっちおいで」", scores:{therapist:{nayuta:3},route:{love:2}}},
-        {text:"「ハニー、店長に任せて」", scores:{therapist:{gorilla:4},route:{adult:2}}, gorillaSecret:3},
-        {text:"言葉より行動で示してほしい", scores:{route:{adult:2},therapist:{gorilla:1}}, gorillaSecret:1}
-      ]
-    },
-    {
-      text:"今日くらいは――",
-      choices:[
-        {text:"いっぱい笑いたい", scores:{route:{date:3}}},
-        {text:"思いっきり甘えたい", scores:{route:{love:3},therapist:{nayuta:1}}},
-        {text:"ちょっとだけ、悪い子になりたい", scores:{route:{adult:4}}, gorillaSecret:1}
-      ]
-    },
-    {
-      text:"目の前に、二つの扉がある。\nさて、どっちへ行く？",
-      sub:"一方からは静かな低い声。\nもう一方からは……なぜかダンベルが転がってきた。",
-      choices:[
-        {text:"静かな声のする方へ", scores:{therapist:{nayuta:4}}, tie:{therapist:"nayuta"}},
-        {text:"ダンベルを拾ってみる", scores:{therapist:{gorilla:4}}, tie:{therapist:"gorilla"}, gorillaSecret:4},
-        {text:"目を閉じて、直感で扉を開ける", scores:{route:{date:1,love:1,adult:1}}}
-      ]
-    }
-  ];
-
   let state = freshState();
 
-  function freshState(){
+  function freshState() {
     return {
-      name:"あなた",
-      index:0,
-      score:{ therapist:{nayuta:0,gorilla:0}, route:{date:0,love:0,adult:0} },
-      tie:{therapist:"nayuta",route:"love"},
-      gorillaSecret:0,
-      result:null
+      name: "あなた",
+      index: 0,
+      score: {
+        therapist: {nayuta: 0, gorilla: 0},
+        route: {date: 0, love: 0, adult: 0}
+      },
+      tie: {therapist: "nayuta", route: "love"},
+      gorillaSecret: 0,
+      result: null
     };
   }
 
-  function esc(s){
-    return String(s ?? "").replace(/[&<>"']/g, m => ({
-      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-    }[m]));
+  function esc(value) {
+    return String(value ?? "").replace(/[&<>"']/g, char => ({
+      "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#039;"
+    }[char]));
   }
 
-  function calledName(){
+  function htmlText(value) {
+    return esc(value).replace(/\n/g, "<br>");
+  }
+
+  function template(value, vars = {}) {
+    let out = String(value ?? "");
+    Object.entries(vars).forEach(([key, val]) => {
+      out = out.replaceAll(`{${key}}`, String(val));
+    });
+    return out;
+  }
+
+  function calledName() {
     return state.name === "あなた" ? "ハニー" : state.name;
   }
 
-  function setBg(url, pos="center"){
-    if(!url){
+  function personalize(value) {
+    return String(value ?? "").replaceAll("○○", calledName());
+  }
+
+  function setBg(url, pos = "center") {
+    if (!url) {
       backdrop.style.backgroundImage = "";
       backdrop.style.backgroundPosition = "center";
       return;
@@ -115,462 +69,602 @@
     backdrop.style.backgroundPosition = pos;
   }
 
-  function getFound(){
-    try{ return JSON.parse(localStorage.getItem("amehaNovelEndsV3") || "[]"); }
-    catch{ return []; }
-  }
-
-  function saveEnding(id){
-    const list = getFound();
-    if(!list.includes(id)){
-      list.push(id);
-      localStorage.setItem("amehaNovelEndsV3", JSON.stringify(list));
+  function getFound() {
+    try {
+      return JSON.parse(localStorage.getItem(CONFIG.storageKey) || "[]");
+    } catch {
+      return [];
     }
   }
 
-  function foundSummary(){
-    return `発見済み END：${getFound().length} / ${ENDING_ORDER.length}`;
+  function saveEnding(id) {
+    const list = getFound();
+    if (!list.includes(id)) {
+      list.push(id);
+      localStorage.setItem(CONFIG.storageKey, JSON.stringify(list));
+    }
   }
 
-  function gorillaLevel(){
+  function foundSummary() {
+    return `発見済み END：${getFound().length} / ${CONFIG.endingOrder.length}`;
+  }
+
+  function gorillaLevel() {
     const g = state.score.therapist.gorilla || 0;
     const n = state.score.therapist.nayuta || 0;
-    const total = Math.max(1, g+n);
-    return Math.min(100, Math.round((g/total)*100));
+    const total = Math.max(1, g + n);
+    return Math.min(100, Math.round((g / total) * 100));
   }
 
-  function updateCorruption(){
+  function updateCorruption() {
     const level = gorillaLevel();
-    if(state.index >= 3 && level >= 55){
+
+    if (state.index >= 3 && level >= 55) {
       gorillaMeter.hidden = false;
       gorillaMeter.textContent = `GORILLA LEVEL ${level}%`;
-      brand.textContent = level >= 75 ? "SYSTEM // GORILLA" : "THERAPIST STORY";
-    }else{
+      brand.textContent = level >= 75 ? "SYSTEM // GORILLA" : TEXT.ui.brand;
+    } else {
       gorillaMeter.hidden = true;
-      brand.textContent = "THERAPIST STORY";
+      brand.textContent = TEXT.ui.brand;
     }
   }
 
-  function showAlert(msg, duration=1400){
-    systemAlert.innerHTML = msg;
+  function showAlert(message, duration = 1400) {
+    systemAlert.innerHTML = htmlText(message);
     systemAlert.classList.add("on");
-    setTimeout(()=>systemAlert.classList.remove("on"), duration);
+    setTimeout(() => systemAlert.classList.remove("on"), duration);
   }
 
-  function startScreen(){
+  function getTherapistText(id) {
+    return TEXT[id];
+  }
+
+  function getEndingConfig(therapist, route) {
+    return CONFIG.therapists[therapist].endings[route];
+  }
+
+  function getEndingText(therapist, route) {
+    return TEXT[therapist][route];
+  }
+
+  function startScreen() {
     state = freshState();
     homeBtn.hidden = true;
     gorillaMeter.hidden = true;
-    brand.textContent = "THERAPIST STORY";
+    brand.textContent = TEXT.ui.brand;
     setBg(null);
+
     stage.innerHTML = `
       <section class="card center">
-        <div class="kicker">MULTI ENDING NOVEL / 8 QUESTIONS</div>
-        <h1 class="title">あなたが今日、<br>出会うのは――？</h1>
-        <p class="lead">8つの選択の先で、<br>出会う相手と、その人との過ごし方が変わります。</p>
-        <div class="collection-summary">${foundSummary()}</div>
+        <div class="kicker">${esc(TEXT.ui.titleKicker)}</div>
+        <h1 class="title">${htmlText(TEXT.ui.title)}</h1>
+        <p class="lead">${htmlText(TEXT.ui.titleLead)}</p>
+        <div class="collection-summary">${esc(foundSummary())}</div>
         <div class="actions">
-          <button class="btn primary" id="startBtn">START</button>
-          <button class="btn" id="collectionStartBtn">エンディング一覧を見る</button>
+          <button class="btn primary" id="startBtn">${esc(TEXT.ui.start)}</button>
+          <button class="btn" id="collectionStartBtn">${esc(TEXT.ui.viewCollection)}</button>
         </div>
       </section>`;
+
     document.getElementById("startBtn").onclick = nameScreen;
     document.getElementById("collectionStartBtn").onclick = collectionScreen;
   }
 
-  function nameScreen(){
+  function nameScreen() {
     homeBtn.hidden = false;
+
     stage.innerHTML = `
       <section class="card">
-        <div class="kicker">BEFORE START</div>
-        <h2 class="question">なんて呼ばれたい？</h2>
-        <p class="muted">ゲーム中の呼び名に使います。入力内容は保存しません。</p>
-        <input id="nameInput" class="name-input" maxlength="12" placeholder="例：さくら">
+        <div class="kicker">${esc(TEXT.ui.nameKicker)}</div>
+        <h2 class="question">${htmlText(TEXT.ui.nameQuestion)}</h2>
+        <p class="muted">${htmlText(TEXT.ui.nameHelp)}</p>
+        <input id="nameInput" class="name-input" maxlength="12" placeholder="${esc(TEXT.ui.namePlaceholder)}">
         <div class="actions">
-          <button class="btn primary" id="nameGo">この名前で始める</button>
-          <button class="btn" id="skipName">名前を入れずに始める</button>
+          <button class="btn primary" id="nameGo">${esc(TEXT.ui.nameSubmit)}</button>
+          <button class="btn" id="skipName">${esc(TEXT.ui.nameSkip)}</button>
         </div>
       </section>`;
+
     const input = document.getElementById("nameInput");
-    const go = () => { state.name = input.value.trim() || "あなた"; questionScreen(); };
+
+    const go = () => {
+      state.name = input.value.trim() || "あなた";
+      questionScreen();
+    };
+
     document.getElementById("nameGo").onclick = go;
-    document.getElementById("skipName").onclick = () => { state.name = "あなた"; questionScreen(); };
-    input.addEventListener("keydown", e => { if(e.key === "Enter") go(); });
+    document.getElementById("skipName").onclick = () => {
+      state.name = "あなた";
+      questionScreen();
+    };
+
+    input.addEventListener("keydown", event => {
+      if (event.key === "Enter") go();
+    });
+
     input.focus();
   }
 
-  function progressHtml(){
-    return `<div class="progress">${QUESTIONS.map((_,i)=>`<i class="${i<=state.index?"on":""}"></i>`).join("")}</div>`;
+  function progressHtml() {
+    return `<div class="progress">${
+      CONFIG.questions.map((_, i) => `<i class="${i <= state.index ? "on" : ""}"></i>`).join("")
+    }</div>`;
   }
 
-  function questionScreen(){
+  function questionScreen() {
     setBg(null);
     updateCorruption();
-    const q = QUESTIONS[state.index];
+
+    const qConfig = CONFIG.questions[state.index];
+    const qText = TEXT.questions[qConfig.id];
     const corrupt = gorillaLevel() >= 75 && state.index >= 4;
+
     stage.innerHTML = `
       <section class="card ${corrupt ? "system-corrupt" : ""}">
         ${progressHtml()}
-        <div class="kicker">${corrupt ? "GORILLA DIAGNOSTIC" : `QUESTION ${state.index+1} / ${QUESTIONS.length}`}</div>
-        <h2 class="question">${esc(q.text).replace(/\n/g,"<br>")}</h2>
-        ${q.sub ? `<p class="muted">${esc(q.sub).replace(/\n/g,"<br>")}</p>` : ""}
+        <div class="kicker">${
+          corrupt ? "GORILLA DIAGNOSTIC" : `QUESTION ${state.index + 1} / ${CONFIG.questions.length}`
+        }</div>
+        <h2 class="question">${htmlText(qText.text)}</h2>
+        ${qText.sub ? `<p class="muted">${htmlText(qText.sub)}</p>` : ""}
         <div class="actions" id="choices"></div>
       </section>`;
 
     const wrap = document.getElementById("choices");
-    q.choices.forEach(choice => {
-      const btn = document.createElement("button");
-      btn.className = "choice" + (choice.gorillaSecret ? " gorilla-choice" : "");
-      btn.textContent = choice.text;
-      btn.onclick = () => choose(choice);
-      wrap.appendChild(btn);
+
+    qConfig.choices.forEach(choiceConfig => {
+      const button = document.createElement("button");
+      button.className = "choice" + (choiceConfig.gorillaSecret ? " gorilla-choice" : "");
+      button.textContent = qText.choices[choiceConfig.id];
+      button.onclick = () => choose(choiceConfig);
+      wrap.appendChild(button);
     });
   }
 
-  function addScores(target, scores){
-    if(!scores) return;
-    Object.entries(scores).forEach(([k,v]) => target[k] = (target[k] || 0) + v);
+  function addScores(target, scores) {
+    if (!scores) return;
+    Object.entries(scores).forEach(([key, val]) => {
+      target[key] = (target[key] || 0) + val;
+    });
   }
 
-  function choose(choice){
+  function choose(choice) {
     addScores(state.score.therapist, choice.scores?.therapist);
     addScores(state.score.route, choice.scores?.route);
+
     state.gorillaSecret += choice.gorillaSecret || 0;
 
-    if(choice.tie?.therapist) state.tie.therapist = choice.tie.therapist;
-    if(choice.tie?.route) state.tie.route = choice.tie.route;
+    if (choice.tie?.therapist) state.tie.therapist = choice.tie.therapist;
+    if (choice.tie?.route) state.tie.route = choice.tie.route;
 
     const level = gorillaLevel();
-    if(state.index >= 4 && level >= 82 && state.gorillaSecret >= 6){
-      showAlert(`警告<br>ゴリラ濃度が規定値を超えました。`);
+
+    if (state.index >= 4 && level >= 82 && state.gorillaSecret >= 6) {
+      showAlert(TEXT.ui.systemWarning);
     }
 
     state.index++;
-    if(state.index < QUESTIONS.length) questionScreen();
-    else preReveal();
+
+    if (state.index < CONFIG.questions.length) {
+      questionScreen();
+    } else {
+      preReveal();
+    }
   }
 
-  function maxKey(obj, fallback){
+  function maxKey(obj, fallback) {
     const entries = Object.entries(obj);
-    const max = Math.max(...entries.map(([,v])=>v));
-    const winners = entries.filter(([,v])=>v===max).map(([k])=>k);
-    return winners.length === 1 ? winners[0] : (winners.includes(fallback) ? fallback : winners[0]);
+    const max = Math.max(...entries.map(([, value]) => value));
+    const winners = entries.filter(([, value]) => value === max).map(([key]) => key);
+
+    return winners.length === 1
+      ? winners[0]
+      : (winners.includes(fallback) ? fallback : winners[0]);
   }
 
-  function resolveResult(){
+  function resolveResult() {
     const therapist = maxKey(state.score.therapist, state.tie.therapist);
     const route = maxKey(state.score.route, state.tie.route);
-    const secret = therapist === "gorilla" && state.gorillaSecret >= 10 && state.score.therapist.gorilla >= 12;
-    return secret ? {therapist:"gorilla",route:"true"} : {therapist,route};
+
+    const secret =
+      therapist === "gorilla" &&
+      state.gorillaSecret >= CONFIG.secretCondition.minimumSecretPoints &&
+      state.score.therapist.gorilla >= CONFIG.secretCondition.minimumGorillaPoints;
+
+    return secret
+      ? {therapist: "gorilla", route: "true"}
+      : {therapist, route};
   }
 
-  function preReveal(){
+  function preReveal() {
     state.result = resolveResult();
 
-    if(state.result.route === "true"){
+    if (state.result.route === "true") {
       brand.textContent = "SYSTEM // OVERRIDDEN";
       gorillaMeter.hidden = false;
       gorillaMeter.textContent = "GORILLA LEVEL 100%";
+
       stage.innerHTML = `
         <section class="card center system-corrupt">
-          <div class="kicker corrupt-text">SYSTEM WARNING</div>
-          <h2 class="title">判定処理に<br>異常が発生しました。</h2>
-          <p class="lead">原因：ゴリラを選びすぎています。</p>
+          <div class="kicker corrupt-text">${esc(TEXT.ui.systemErrorKicker)}</div>
+          <h2 class="title">${htmlText(TEXT.ui.systemErrorTitle)}</h2>
+          <p class="lead">${htmlText(TEXT.ui.systemErrorLead)}</p>
           <div class="actions">
-            <button class="btn primary" id="continueSecret">続行する</button>
+            <button class="btn primary" id="continueSecret">${esc(TEXT.ui.systemContinue)}</button>
           </div>
         </section>`;
+
       document.getElementById("continueSecret").onclick = () => {
-        showAlert("ルート補正を無視します。", 900);
+        showAlert(TEXT.ui.systemOverride, 900);
         setTimeout(normalPreReveal, 700);
       };
+
       return;
     }
+
     normalPreReveal();
   }
 
-  function normalPreReveal(){
+  function normalPreReveal() {
     setBg(null);
+
     stage.innerHTML = `
       <section class="card center">
-        <div class="kicker">RESULT</div>
+        <div class="kicker">${esc(TEXT.ui.resultKicker)}</div>
         <div class="reveal-dots">…</div>
-        <h2 class="title">今日、${esc(state.name)}が<br>選んだ物語は――</h2>
-        <p class="lead">その扉の先にいる人へ。</p>
+        <h2 class="title">${htmlText(template(TEXT.ui.resultTitle, {name: state.name}))}</h2>
+        <p class="lead">${htmlText(TEXT.ui.resultLead)}</p>
         <div class="actions">
-          <button class="btn primary" id="revealBtn">扉を開ける</button>
+          <button class="btn primary" id="revealBtn">${esc(TEXT.ui.revealButton)}</button>
         </div>
       </section>`;
+
     document.getElementById("revealBtn").onclick = dramaticReveal;
   }
 
-  function dramaticReveal(){
+  function dramaticReveal() {
     flash.classList.add("on");
+
     setTimeout(() => {
-      if(state.result.therapist === "gorilla") startGorillaEnding();
-      else revealStandardEnding();
+      if (state.result.therapist === "gorilla") {
+        startGorillaEnding();
+      } else {
+        revealNayutaEnding();
+      }
+
       setTimeout(() => flash.classList.remove("on"), 150);
     }, 580);
   }
 
-  function endingObject(){
-    const t = THERAPISTS[state.result.therapist];
-    const e = t.endings[state.result.route];
-    return {t,e};
-  }
+  function revealNayutaEnding() {
+    const tConfig = CONFIG.therapists.nayuta;
+    const tText = TEXT.nayuta;
+    const eConfig = getEndingConfig("nayuta", state.result.route);
+    const eText = getEndingText("nayuta", state.result.route);
 
-  function personalize(text){
-    return text.replaceAll("○○", calledName());
-  }
+    saveEnding(eConfig.id);
+    setBg(eConfig.image, eConfig.position);
 
-  function revealStandardEnding(){
-    const {t,e} = endingObject();
-    saveEnding(e.id);
-    setBg(e.image, e.position);
     stage.innerHTML = `
       <section class="card center">
-        <div class="ending-count">${e.label}</div>
-        <div class="result-name">${t.name}</div>
-        <div class="result-route">${e.routeLabel}</div>
-        <p class="lead">${esc(personalize(e.line)).replace(/\n/g,"<br>")}</p>
-        <p class="muted">${esc(e.body).replace(/\n/g,"<br>")}</p>
-        ${finalActions(t)}
+        <div class="ending-count">${esc(eText.label)}</div>
+        <div class="result-name">${esc(tText.name)}</div>
+        <div class="result-route">${esc(eText.routeLabel)}</div>
+        <p class="lead">${htmlText(personalize(eText.line))}</p>
+        <p class="muted">${htmlText(eText.body)}</p>
+        ${finalActions("nayuta")}
       </section>`;
-    bindFinalActions(t);
+
+    bindFinalActions("nayuta");
   }
 
-  function startGorillaEnding(){
-    const {e} = endingObject();
-    setBg(e.image, e.position);
+  function startGorillaEnding() {
+    const route = state.result.route;
+    const eConfig = getEndingConfig("gorilla", route);
+    setBg(eConfig.image, eConfig.position);
 
-    if(state.result.route === "date") gorillaDate1();
-    else if(state.result.route === "love") gorillaLove1();
-    else if(state.result.route === "adult") gorillaDark1();
+    if (route === "date") gorillaDate1();
+    else if (route === "love") gorillaLove1();
+    else if (route === "adult") gorillaDark1();
     else gorillaTrue1();
   }
 
-  function gorillaDate1(){
+  // -------------------------------------------------------
+  // GORILLA DATE
+  // -------------------------------------------------------
+  function gorillaDate1() {
+    const t = TEXT.gorilla.date;
+
     stage.innerHTML = `
       <section class="card">
-        <div class="speaker">ゴリラ</div>
-        <div class="dialogue">「ハニー。今日は店長が最高のデートプランを考えてきたよ。」</div>
+        <div class="speaker">${esc(TEXT.gorilla.name)}</div>
+        <div class="dialogue">${htmlText(t.opening)}</div>
         <div class="actions">
-          <button class="choice" id="gd1">ちょっと安心する</button>
+          <button class="choice" id="gd1">${esc(t.openingChoice)}</button>
         </div>
       </section>`;
+
     document.getElementById("gd1").onclick = gorillaDate2;
   }
 
-  function gorillaDate2(){
+  function gorillaDate2() {
+    const t = TEXT.gorilla.date;
+
     stage.innerHTML = `
       <section class="card">
-        <div class="speaker">ゴリラ</div>
-        <div class="dialogue">「まずジムでBIG3測ります。」<br><br>「そのあとポケカショップ。」<br><br>「最後は公園を散歩しよう。」</div>
-        <div class="actions"><button class="choice" id="gd2">……意外と普通？</button></div>
+        <div class="speaker">${esc(TEXT.gorilla.name)}</div>
+        <div class="dialogue">${htmlText(t.plan)}</div>
+        <div class="actions">
+          <button class="choice" id="gd2">${esc(t.planChoice)}</button>
+        </div>
       </section>`;
+
     document.getElementById("gd2").onclick = gorillaDate3;
   }
 
-  function gorillaDate3(){
+  function gorillaDate3() {
+    const t = TEXT.gorilla.date;
+
     stage.innerHTML = `
       <section class="card">
-        <div class="speaker">ゴリラ</div>
-        <div class="dialogue">「あ、散歩で使う首輪。」<br><br>「赤と黒、どっちがいい？」</div>
+        <div class="speaker">${esc(TEXT.gorilla.name)}</div>
+        <div class="dialogue">${htmlText(t.collar)}</div>
         <div class="actions">
-          <button class="choice" data-answer="wait">待って</button>
-          <button class="choice" data-answer="why">なぜ首輪があるの？</button>
-          <button class="choice gorilla-choice" data-answer="black">黒</button>
+          <button class="choice" data-answer="wait">${esc(t.collarChoices.wait)}</button>
+          <button class="choice" data-answer="why">${esc(t.collarChoices.why)}</button>
+          <button class="choice gorilla-choice" data-answer="black">${esc(t.collarChoices.black)}</button>
         </div>
       </section>`;
-    stage.querySelectorAll("[data-answer]").forEach(b => b.onclick = () => {
-      const a = b.dataset.answer;
-      const extra = a === "black" ? "「さすがハニー。店長も黒だと思ってた。」" :
-                    a === "why" ? "「散歩だから。」" : "「うん。店長も今ちょっと待った方がいいと思った。」";
-      finishGorilla("date", extra, "今日あなたが学んだこと。\\n「デート」という言葉の定義は、人によってかなり違う。");
+
+    stage.querySelectorAll("[data-answer]").forEach(button => {
+      button.onclick = () => {
+        const answer = button.dataset.answer;
+        finishGorilla("date", t.collarReplies[answer], t.footer);
+      };
     });
   }
 
-  function gorillaLove1(){
+  // -------------------------------------------------------
+  // GORILLA LOVE
+  // -------------------------------------------------------
+  function gorillaLove1() {
+    const t = TEXT.gorilla.love;
+
     stage.innerHTML = `
       <section class="card">
-        <div class="speaker">ゴリラ</div>
-        <div class="dialogue">「ハニー。店長さ、今日はちゃんと恋人っぽいことしたいんだ。」</div>
+        <div class="speaker">${esc(TEXT.gorilla.name)}</div>
+        <div class="dialogue">${htmlText(t.opening)}</div>
         <div class="actions">
-          <button class="choice" data-love="hand">手をつなぐ？</button>
-          <button class="choice" data-love="hug">ハグ？</button>
-          <button class="choice" data-love="kiss">キス？</button>
+          <button class="choice" data-love="hand">${esc(t.guesses.hand)}</button>
+          <button class="choice" data-love="hug">${esc(t.guesses.hug)}</button>
+          <button class="choice" data-love="kiss">${esc(t.guesses.kiss)}</button>
         </div>
       </section>`;
-    stage.querySelectorAll("[data-love]").forEach(b => b.onclick = gorillaLove2);
+
+    stage.querySelectorAll("[data-love]").forEach(button => {
+      button.onclick = gorillaLove2;
+    });
   }
 
-  function gorillaLove2(){
+  function gorillaLove2() {
+    const t = TEXT.gorilla.love;
+
     stage.innerHTML = `
       <section class="card center">
-        <div class="kicker">恋人っぽいこと</div>
-        <h2 class="title">腕相撲。</h2>
+        <div class="kicker">${esc(t.revealKicker)}</div>
+        <h2 class="title">${htmlText(t.reveal)}</h2>
         <div class="actions">
-          <button class="choice" data-arm="fight">本気で勝ちにいく</button>
-          <button class="choice" data-arm="lose">わざと負ける</button>
-          <button class="choice" data-arm="no">そもそもやらない</button>
+          <button class="choice" data-arm="fight">${esc(t.armChoices.fight)}</button>
+          <button class="choice" data-arm="lose">${esc(t.armChoices.lose)}</button>
+          <button class="choice" data-arm="no">${esc(t.armChoices.no)}</button>
         </div>
       </section>`;
-    stage.querySelectorAll("[data-arm]").forEach(b => b.onclick = () => {
-      const a = b.dataset.arm;
-      let msg = "";
-      if(a === "fight") msg = "「いいねハニー。そういう女、店長好きだよ。」";
-      if(a === "lose") msg = "「……今、手抜いたでしょ？」";
-      if(a === "no") msg = "「そっか。じゃあ普通に手つなご。」";
-      gorillaLove3(msg);
+
+    stage.querySelectorAll("[data-arm]").forEach(button => {
+      button.onclick = () => {
+        gorillaLove3(t.armReplies[button.dataset.arm]);
+      };
     });
   }
 
-  function gorillaLove3(msg){
+  function gorillaLove3(reply) {
+    const t = TEXT.gorilla.love;
+
     stage.innerHTML = `
       <section class="card">
-        <div class="speaker">ゴリラ</div>
-        <div class="dialogue">${esc(msg)}<br><br>店長があなたの手を握る。<br><br>「ハニー。店長、こう見えて手つなぐ時は普通なんだよ。」<br><br>……3秒後。<br><br>「このあとプロテイン飲みに行く？」</div>
-        <div class="actions"><button class="btn primary" id="glEnd">ENDへ</button></div>
-      </section>`;
-    document.getElementById("glEnd").onclick = () => finishGorilla("love", "", "恋とは、腕相撲のあとに始まる。");
-  }
-
-  function gorillaDark1(){
-    stage.innerHTML = `
-      <section class="card">
-        <div class="speaker">ゴリラ</div>
-        <div class="dialogue">「ハニー。ここから先は、ちゃんと確認しながらいくから安心して。」<br><br>「嫌なことは嫌って言ってね。」</div>
+        <div class="speaker">${esc(TEXT.gorilla.name)}</div>
+        <div class="dialogue">${htmlText(reply)}<br><br>${htmlText(t.closing)}</div>
         <div class="actions">
-          <button class="choice" data-dark="ok">うん</button>
-          <button class="choice" data-dark="nervous">ちょっと緊張する</button>
-          <button class="choice gorilla-choice" data-dark="leave">店長に任せる</button>
+          <button class="btn primary" id="glEnd">${esc(t.endButton)}</button>
         </div>
       </section>`;
-    stage.querySelectorAll("[data-dark]").forEach(b => b.onclick = gorillaDark2);
-  }
 
-  function gorillaDark2(){
-    flash.classList.add("on");
-    setTimeout(()=>{
-      flash.classList.remove("on");
-      stage.innerHTML = `
-        <section class="card">
-          <div class="kicker corrupt-text">ITEM GET</div>
-          <div class="item-card">
-            <div class="item-title">LEGENDARY EQUIPMENT</div>
-            <div class="item-name">首輪</div>
-            <div class="item-stats">
-              レア度：★★★★★<br>
-              防御力：0<br>
-              店長への信頼度：+50<br>
-              使用条件：双方の同意
-            </div>
-          </div>
-          <div class="actions">
-            <button class="choice" data-item="equip">装備する</button>
-            <button class="choice" data-item="info">アイテム説明をもう一度読む</button>
-            <button class="choice" data-item="drop">捨てる</button>
-          </div>
-        </section>`;
-      stage.querySelectorAll("[data-item]").forEach(b => b.onclick = () => {
-        const a = b.dataset.item;
-        if(a === "info"){ gorillaDark2(); return; }
-        const msg = a === "equip" ? "「ハニー。似合う。」\\n\\n「……店長より強そう。」" :
-                    "「うん。要らない時は使わなくていい。」";
-        finishGorilla("adult", msg, "あなたは禁断の装備を手に入れた。");
-      });
-    },550);
-  }
-
-  function gorillaTrue1(){
-    brand.textContent = "GORILLA SYSTEM";
-    gorillaMeter.hidden = false;
-    gorillaMeter.textContent = "GORILLA LEVEL 100%";
-    stage.innerHTML = `
-      <section class="card center system-corrupt">
-        <div class="kicker corrupt-text">SECRET ROUTE</div>
-        <h2 class="title">GORILLA TRUE END</h2>
-        <p class="lead">「……ハニー。」<br><br>「店長を選びすぎ。」</p>
-        <div class="actions">
-          <button class="btn primary" id="gt1">続ける</button>
-        </div>
-      </section>`;
-    document.getElementById("gt1").onclick = () => {
-      stage.innerHTML = `
-        <section class="card center system-corrupt">
-          <div class="kicker corrupt-text">SYSTEM OVERRIDDEN</div>
-          <h2 class="title">もう店長から<br>逃げられない</h2>
-          <p class="lead">診断結果ではありません。<br>あなた自身がここまで来ました。</p>
-          <div class="actions">
-            <button class="btn primary" id="gtEnd">受け入れる</button>
-          </div>
-        </section>`;
-      document.getElementById("gtEnd").onclick = () => finishGorilla("true", "「ハニー。覚悟はいい？」", "GORILLA LEVEL：MAX");
+    document.getElementById("glEnd").onclick = () => {
+      finishGorilla("love", "", t.footer);
     };
   }
 
-  function finishGorilla(route, extra, footer){
-    const t = THERAPISTS.gorilla;
-    const e = t.endings[route];
-    saveEnding(e.id);
-    setBg(e.image, e.position);
+  // -------------------------------------------------------
+  // GORILLA DARK
+  // -------------------------------------------------------
+  function gorillaDark1() {
+    const t = TEXT.gorilla.adult;
+
     stage.innerHTML = `
-      <section class="card center ${route==="true" ? "system-corrupt" : ""}">
-        <div class="ending-count">${e.label}</div>
-        <div class="result-name">ゴリラ</div>
-        <div class="result-route">${e.routeLabel}</div>
-        <h2 class="question" style="margin-top:14px">${esc(e.title)}</h2>
-        ${extra ? `<p class="lead">${esc(extra).replace(/\n/g,"<br>")}</p>` : ""}
-        <p class="muted">${esc(footer).replace(/\n/g,"<br>")}</p>
-        ${finalActions(t)}
+      <section class="card">
+        <div class="speaker">${esc(TEXT.gorilla.name)}</div>
+        <div class="dialogue">${htmlText(t.opening)}</div>
+        <div class="actions">
+          <button class="choice" data-dark="ok">${esc(t.choices.ok)}</button>
+          <button class="choice" data-dark="nervous">${esc(t.choices.nervous)}</button>
+          <button class="choice gorilla-choice" data-dark="leave">${esc(t.choices.leave)}</button>
+        </div>
       </section>`;
-    bindFinalActions(t);
+
+    stage.querySelectorAll("[data-dark]").forEach(button => {
+      button.onclick = gorillaDark2;
+    });
   }
 
-  function finalActions(t){
+  function gorillaDark2() {
+    const t = TEXT.gorilla.adult;
+
+    flash.classList.add("on");
+
+    setTimeout(() => {
+      flash.classList.remove("on");
+
+      stage.innerHTML = `
+        <section class="card">
+          <div class="kicker corrupt-text">${esc(t.itemKicker)}</div>
+          <div class="item-card">
+            <div class="item-title">${esc(t.itemCategory)}</div>
+            <div class="item-name">${esc(t.itemName)}</div>
+            <div class="item-stats">${htmlText(t.itemStats)}</div>
+          </div>
+          <div class="actions">
+            <button class="choice" data-item="equip">${esc(t.itemChoices.equip)}</button>
+            <button class="choice" data-item="info">${esc(t.itemChoices.info)}</button>
+            <button class="choice" data-item="drop">${esc(t.itemChoices.drop)}</button>
+          </div>
+        </section>`;
+
+      stage.querySelectorAll("[data-item]").forEach(button => {
+        button.onclick = () => {
+          const answer = button.dataset.item;
+
+          if (answer === "info") {
+            gorillaDark2();
+            return;
+          }
+
+          finishGorilla("adult", t.itemReplies[answer], t.footer);
+        };
+      });
+    }, 550);
+  }
+
+  // -------------------------------------------------------
+  // GORILLA TRUE
+  // -------------------------------------------------------
+  function gorillaTrue1() {
+    const t = TEXT.gorilla.true;
+
+    brand.textContent = "GORILLA SYSTEM";
+    gorillaMeter.hidden = false;
+    gorillaMeter.textContent = "GORILLA LEVEL 100%";
+
+    stage.innerHTML = `
+      <section class="card center system-corrupt">
+        <div class="kicker corrupt-text">${esc(t.kicker)}</div>
+        <h2 class="title">${esc(t.label)}</h2>
+        <p class="lead">${htmlText(t.opening)}</p>
+        <div class="actions">
+          <button class="btn primary" id="gt1">${esc(t.continueButton)}</button>
+        </div>
+      </section>`;
+
+    document.getElementById("gt1").onclick = () => {
+      stage.innerHTML = `
+        <section class="card center system-corrupt">
+          <div class="kicker corrupt-text">${esc(t.overrideKicker)}</div>
+          <h2 class="title">${htmlText(t.overrideTitle)}</h2>
+          <p class="lead">${htmlText(t.overrideLead)}</p>
+          <div class="actions">
+            <button class="btn primary" id="gtEnd">${esc(t.acceptButton)}</button>
+          </div>
+        </section>`;
+
+      document.getElementById("gtEnd").onclick = () => {
+        finishGorilla("true", t.finalReply, t.footer);
+      };
+    };
+  }
+
+  function finishGorilla(route, extra, footer) {
+    const eConfig = getEndingConfig("gorilla", route);
+    const eText = getEndingText("gorilla", route);
+
+    saveEnding(eConfig.id);
+    setBg(eConfig.image, eConfig.position);
+
+    stage.innerHTML = `
+      <section class="card center ${route === "true" ? "system-corrupt" : ""}">
+        <div class="ending-count">${esc(eText.label)}</div>
+        <div class="result-name">${esc(TEXT.gorilla.name)}</div>
+        <div class="result-route">${esc(eText.routeLabel)}</div>
+        <h2 class="question" style="margin-top:14px">${htmlText(eText.title)}</h2>
+        ${extra ? `<p class="lead">${htmlText(extra)}</p>` : ""}
+        <p class="muted">${htmlText(footer)}</p>
+        ${finalActions("gorilla")}
+      </section>`;
+
+    bindFinalActions("gorilla");
+  }
+
+  function finalActions(therapistId) {
+    const name = TEXT[therapistId].name;
+
     return `
       <div class="actions">
-        <button class="btn primary" id="profileBtn">${t.name}のプロフィールを見る</button>
-        <button class="btn" id="againBtn">別のENDを探す</button>
-        <button class="btn" id="collectionEndBtn">ENDコレクションを見る</button>
+        <button class="btn primary" id="profileBtn">${
+          esc(template(TEXT.ui.profileButton, {therapist: name}))
+        }</button>
+        <button class="btn" id="againBtn">${esc(TEXT.ui.retryButton)}</button>
+        <button class="btn" id="collectionEndBtn">${esc(TEXT.ui.collectionButton)}</button>
       </div>
-      <div class="collection-summary">${foundSummary()}</div>`;
+      <div class="collection-summary">${esc(foundSummary())}</div>`;
   }
 
-  function bindFinalActions(t){
-    document.getElementById("profileBtn").onclick = () => window.open(t.profileUrl,"_blank","noopener");
+  function bindFinalActions(therapistId) {
+    const profileUrl = CONFIG.therapists[therapistId].profileUrl;
+
+    document.getElementById("profileBtn").onclick = () => {
+      window.open(profileUrl, "_blank", "noopener");
+    };
+
     document.getElementById("againBtn").onclick = startScreen;
     document.getElementById("collectionEndBtn").onclick = collectionScreen;
   }
 
-  function collectionScreen(){
+  function collectionScreen() {
     homeBtn.hidden = false;
     gorillaMeter.hidden = true;
-    brand.textContent = "THERAPIST STORY";
+    brand.textContent = TEXT.ui.brand;
     setBg(null);
+
     const found = getFound();
 
-    const rows = ENDING_ORDER.map(([tid,route], idx) => {
-      const t = THERAPISTS[tid];
-      const e = t.endings[route];
-      const isFound = found.includes(e.id);
-      const secret = route === "true";
+    const rows = CONFIG.endingOrder.map(([therapistId, route], index) => {
+      const config = getEndingConfig(therapistId, route);
+      const text = getEndingText(therapistId, route);
+      const isFound = found.includes(config.id);
+      const isSecret = route === "true";
+
       return `
-        <div class="end-item ${isFound ? "found" : ""} ${secret ? "secret-item" : ""}">
-          <div class="label">${String(idx+1).padStart(2,"0")}　${isFound ? esc(e.label) : "？？？"}</div>
-          <div class="state">${isFound ? "FOUND" : "未発見"}</div>
+        <div class="end-item ${isFound ? "found" : ""} ${isSecret ? "secret-item" : ""}">
+          <div class="label">
+            ${String(index + 1).padStart(2, "0")}　
+            ${isFound ? esc(text.label) : esc(TEXT.ui.hiddenEnding)}
+          </div>
+          <div class="state">${isFound ? esc(TEXT.ui.found) : esc(TEXT.ui.notFound)}</div>
         </div>`;
     }).join("");
 
     stage.innerHTML = `
       <section class="card">
-        <div class="kicker">ENDING COLLECTION</div>
-        <h2 class="question">END COLLECTION</h2>
-        <p class="muted">${foundSummary()}。7つ目は特定条件でのみ出現します。</p>
+        <div class="kicker">${esc(TEXT.ui.collectionKicker)}</div>
+        <h2 class="question">${esc(TEXT.ui.collectionTitle)}</h2>
+        <p class="muted">${
+          esc(template(TEXT.ui.collectionHelp, {
+            found: found.length,
+            total: CONFIG.endingOrder.length
+          }))
+        }</p>
         <div class="collection-grid">${rows}</div>
         <div class="actions">
-          <button class="btn primary" id="playFromCollection">ゲームを始める</button>
-          <button class="btn" id="backFromCollection">タイトルへ戻る</button>
+          <button class="btn primary" id="playFromCollection">${esc(TEXT.ui.collectionPlay)}</button>
+          <button class="btn" id="backFromCollection">${esc(TEXT.ui.collectionBack)}</button>
         </div>
       </section>`;
 
@@ -580,5 +674,6 @@
 
   homeBtn.onclick = startScreen;
   collectionBtn.onclick = collectionScreen;
+
   startScreen();
 })();

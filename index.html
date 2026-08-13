@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#09090c">
-  <title>あなたが今日、出会うのは。｜体験ノベル V3</title>
+  <title>あなたが今日、出会うのは。｜体験ノベル V4</title>
   <meta name="description" content="選択肢によって出会うセラピストと過ごし方が変わる、マルチエンディング型の短編ノベルゲームです。">
   <link rel="stylesheet" href="./css/style.css">
 </head>
@@ -26,10 +26,17 @@
 
     <main id="stage" class="stage" aria-live="polite"></main>
 
-    <div class="prototype-tag">PROTOTYPE V3 / 7 ENDINGS</div>
+    <div class="prototype-tag">PROTOTYPE V4 / 7 ENDINGS</div>
   </div>
 
-  <script src="./js/therapists.js"></script>
+  <!--
+    読み込み順は重要です。
+    1. text.js       = 文章だけ（自由に編集OK）
+    2. game-config.js = 判定・画像・URL（基本触らない）
+    3. game.js       = ゲームシステム（触らない）
+  -->
+  <script src="./content/text.js"></script>
+  <script src="./config/game-config.js"></script>
   <script src="./js/game.js"></script>
 </body>
 </html>

@@ -1,34 +1,69 @@
-AMEHA NOVEL GAME V3 - GitHub Pages用
+AMEHA NOVEL GAME V4 - 保守性改善版
 
-【V3の主な変更】
-・通常6END + 隠しEND 1つ = 合計7END
-・GORILLA TRUE END追加
-・ゴリラ寄り回答時にGORILLA LEVEL表示
-・一定条件でシステム警告
-・ゴリラENDだけゲームジャンルが崩壊する演出
-・GORILLA DATE：BIG3 → ポケカ → 散歩 → 首輪選択
-・GORILLA LOVE：恋愛フラグの代わりに腕相撲
-・GORILLA DARK：RPG風「ITEM GET / 首輪」
-・GORILLA TRUE：システム乗っ取り風SECRET END
-・なゆたENDは王道ノベルのまま維持
+【V4の最大の変更】
+ゲームシステムと文章を完全分離しました。
 
-【7 ENDINGS】
-01 NAYUTA DATE END
-02 NAYUTA LOVE END
-03 NAYUTA NIGHT END
-04 GORILLA DATE END
-05 GORILLA LOVE END
-06 GORILLA DARK END
-07 GORILLA TRUE END（SECRET）
+■ 自由に編集してよいファイル
+content/text.js
 
-【GitHub更新】
-既存リポジトリで Add file → Upload files。
-このV3 ZIPを解凍し、以下を既存ファイルへ上書きしてください。
+このファイルだけで以下を変更できます。
+・質問文
+・選択肢
+・タイトル
+・ボタン文
+・なゆたのセリフ
+・ゴリラのセリフ
+・ナレーション
+・ENDタイトル
+・END説明
+
+文章を変更しても、判定ポイントや分岐条件は変わりません。
+
+--------------------------------------------------
+
+■ 基本触らないファイル
+
+config/game-config.js
+→ 判定ポイント、分岐条件、画像、プロフィールURL、END ID
+
+js/game.js
+→ ゲームシステム本体
+
+css/style.css
+→ デザイン
+
+index.html
+→ 各ファイルの読み込み
+
+--------------------------------------------------
+
+【GitHubで文章だけ変更する手順】
+
+1. GitHubリポジトリを開く
+2. content フォルダを開く
+3. text.js を開く
+4. 鉛筆マーク（Edit this file）
+5. 変更したい文章だけ修正
+6. Commit changes
+
+GitHub Pagesへ自動反映されます。
+
+--------------------------------------------------
+
+【GitHubへV4を更新する方法】
+
+V4 ZIPを解凍して以下をアップロード・上書きします。
 
 index.html
 README.txt
-css/
+EDIT_TEXT_ONLY.txt
+content/
+config/
 js/
+css/
 assets/
 
-GitHub PagesのURLとJimdoのiframe URLは変更不要です。
+V3には content/ と config/ が存在しないため、
+この2フォルダは新規追加されます。
+
+GitHub Pages URLとJimdo iframe URLは変更不要です。
