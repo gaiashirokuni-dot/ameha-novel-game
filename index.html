@@ -1,20 +1,33 @@
 <!doctype html>
 <html lang="ja">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0a0a0d">
-<title>あなたが今日、出会うのは。｜体験ノベル</title>
-<meta name="description" content="選択肢によって出会うセラピストが変わる短編ノベルゲームのプロトタイプです。">
-<link rel="stylesheet" href="./css/style.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#09090c">
+  <title>あなたが今日、出会うのは。｜体験ノベル V2</title>
+  <meta name="description" content="選択肢によって出会うセラピストと過ごし方が変わる、マルチエンディング型の短編ノベルゲームです。">
+  <link rel="stylesheet" href="./css/style.css">
 </head>
 <body>
-<div id="game" class="game-shell">
-  <div id="backdrop" class="backdrop"></div><div class="screen-shade"></div>
-  <div class="topbar"><div class="brand">THERAPIST STORY</div><button id="homeBtn" class="ghost-btn" type="button" hidden>最初から</button></div>
-  <main id="stage" class="stage" aria-live="polite"></main>
-  <div class="prototype-tag">PROTOTYPE / 2 ENDINGS</div>
-</div>
-<script src="./js/therapists.js"></script>
-<script src="./js/game.js"></script>
-</body></html>
+  <div id="game" class="game-shell">
+    <div id="backdrop" class="backdrop"></div>
+    <div id="shade" class="screen-shade"></div>
+    <div id="flash" class="flash"></div>
+
+    <header class="topbar">
+      <div class="brand">THERAPIST STORY</div>
+      <div class="top-actions">
+        <button id="collectionBtn" class="ghost-btn" type="button">END一覧</button>
+        <button id="homeBtn" class="ghost-btn" type="button" hidden>最初から</button>
+      </div>
+    </header>
+
+    <main id="stage" class="stage" aria-live="polite"></main>
+
+    <div class="prototype-tag">PROTOTYPE V2 / 6 ENDINGS</div>
+  </div>
+
+  <script src="./js/therapists.js"></script>
+  <script src="./js/game.js"></script>
+</body>
+</html>
