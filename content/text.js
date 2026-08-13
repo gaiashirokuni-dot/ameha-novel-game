@@ -196,18 +196,18 @@ window.GAME_TEXT = {
       openingChoice: "ちょっと安心する",
 
       plan: "「まずジムでBIG3測ります。」\n\n「そのあとポケカショップ。」\n\n「最後は公園を散歩しよう。」",
-      planChoice: "……意外と普通？",
+      planChoice: "...BIG3以外は、、、まあ普通、かな？",
 
       collar: "「あ、散歩で使う首輪。」\n\n「赤と黒、どっちがいい？」",
       collarChoices: {
         wait: "待って",
-        why: "なぜ首輪があるの？",
+        why: "なぜ首輪があるの!?",
         black: "黒"
       },
 
       collarReplies: {
-        wait: "「うん。店長も今ちょっと待った方がいいと思った。」",
-        why: "「散歩だから。」",
+        wait: "「おすすめは黒だよ（ﾆﾁｬｱ）」",
+        why: "「散歩だから（暗黒微笑）」",
         black: "「さすがハニー。店長も黒だと思ってた。」"
       },
 
@@ -219,7 +219,7 @@ window.GAME_TEXT = {
       routeLabel: "LOVE END",
       title: "恋とは、腕相撲のあとに始まる",
 
-      opening: "「ハニー。店長さ、今日はちゃんと恋人っぽいことしたいんだ。」",
+      opening: "「ハニー。\n 店長さ、今日はちゃんと恋人っぽいことしたいんだ。」",
       guesses: {
         hand: "手をつなぐ？",
         hug: "ハグ？",
@@ -271,7 +271,7 @@ window.GAME_TEXT = {
 
       itemReplies: {
         equip: "「ハニー。似合う。」\n\n「……店長より強そう。」",
-        drop: "「うん。要らない時は使わなくていい。」"
+        drop: "「うん...要らない時は使わなくていいよ...」"
       },
 
       footer: "あなたは禁断の装備を手に入れた。"
