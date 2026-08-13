@@ -1,4 +1,4 @@
-AMEHA NOVEL GAME V5
+AMEHA NOVEL GAME V5 
 
 【V5の変更】
 ・個別ルートを「実写風背景＋背景透過立ち絵＋会話UI」に変更
